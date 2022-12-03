@@ -8,6 +8,7 @@ const router = Router();
 const FILE = path.join(__dirname,'./radata/posts.json');
 
 if(!fs.existsSync(FILE)){
+  fs.mkdirSync(path.join(__dirname, "./radata/"), {recursive: true});
   fs.writeFileSync(FILE, "[]");
 }
 
