@@ -1,7 +1,6 @@
 const {Router} = require('express');
 const fs = require('fs');
 const path = require('path');
-const { getHeapCodeStatistics } = require('v8');
 const router = Router();
 
 // File Api
@@ -88,7 +87,7 @@ router.get('/post/:slug', (req, res) => {
             "banner": banner || post.banner,
             "content": content || post.content,
             "description": description || post.description,
-            "created_at": post.createdAt,
+            "created_at": post.created_at,
             "update_at": updateAt,
             "category": category || post.category,
             "tags": tags || post.tags,
