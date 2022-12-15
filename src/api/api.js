@@ -17,7 +17,8 @@ router.get('/', (req, res) => {
   });
 
 router.get('/post', (req, res) => {
-    res.json(getPosts());
+   const tempPost = getMinPosts();
+    res.json(tempPost);
 });
 
 //  get post from slug
@@ -32,6 +33,33 @@ router.get('/post/:slug', (req, res) => {
  res.status(400).json({"error": "not post from id"});
 });
 
+router.get('/recents', (req, res) => {
+  let recentPost = getMinPosts().sort((a, b) => {
+    a = new Date(a.updated);
+    b = new Date(b.updated);
+    return b.getTime() - a.getTime();
+  });
+ recentPost = recentPost.slice(0, recentPost.length > 5 ? 5 : recentPost.length);
+  res.json([recentPost]);
+});
+
+router.get('/search', (req, res) => {
+  let {title, category, tag} = req.query;
+  tags = [tag];
+  category = category === undefined ? "mainly" : category;
+  const resPost = [];
+  getMinPosts().map((post) => {
+    if(!title || post.title != title) return;
+    else if(!category || post.category != category) return;
+    else if(tag && !post.tags.find((tagi) => {
+      return tagi ==  tag;
+    })){
+      return;
+    }
+    else resPost.push(post);
+  });
+  res.json({filter: {title,category,tag}, results: resPost.length == 0 ? "not results" : resPost, count: resPost.length});
+});
   // route new post form mi blogs
   router.post('/post', (req, res) => {
     const {title, banner, description, content, category, tags} = req.body;
@@ -63,6 +91,7 @@ router.get('/post/:slug', (req, res) => {
       };
       posts.push(newPost);
       updatePosts(posts);
+
       res.json({"sucess": "new post successfully", "body": newPost});
     }
     else{
@@ -117,6 +146,23 @@ router.get('/post/:slug', (req, res) => {
 
   function getPosts(){
     return JSON.parse(fs.readFileSync(FILE, "utf-8"));
+  }
+
+  function getMinPosts(){
+    const tempPost = [];
+    getPosts().map((post) => {
+      tempPost.push({
+        id: post.id,
+        slug: post.slug,
+        title: post.title,
+        description: post.description,
+        created: post.created_at,
+        updated: post.update_at,
+        category: post.category,
+        tags: post.tags
+      });
+     });
+     return tempPost;
   }
   function updatePosts(posts){
     fs.writeFileSync(FILE,JSON.stringify(posts));
