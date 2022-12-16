@@ -109,7 +109,7 @@ router.get('/search', (req, res) => {
     const posts = getPosts();
     posts.forEach((post, index) => {
       if(post.id == id){
-        if(title || banner || description || content || category || tags){
+        if(title || banner || description || content || category || tags || isVideo || video || videoApi || private){
           let slug = title ? title.toLowerCase().replaceAll(" ", "-") : post.slug;
           const updateAt = new Date();
 
