@@ -39,7 +39,7 @@ router.get('/recents', (req, res) => {
     b = new Date(b.updated);
     return b.getTime() - a.getTime();
   });
- recentPost = recentPost.slice(0, recentPost.length > 5 ? 5 : recentPost.length);
+ recentPost = recentPost.slice(0, recentPost.length > 8 ? 8 : recentPost.length);
   res.json({content: recentPost, count: recentPost.length});
 });
 
@@ -49,15 +49,13 @@ router.get('/search', (req, res) => {
   category = category === undefined ? "mainly" : category;
   const resPost = [];
   getMinPosts().map((post) => {
-    if(!title || post.title != title) return;
-    else if(!category || post.category != category) return;
-    else if(tag && !post.tags.find((tagi) => {
-      return tagi ==  tag;
-    })){
-      return;
+    if(post.title == title || post.category == category || post.tags.find((tagi) => {
+       return tagi ==  tag;
+    }) == tag){
+      resPost.push(post);
     }
-    else resPost.push(post);
   });
+  
   res.json({filter: {title,category,tag}, results: resPost.length == 0 ? "not results" : resPost, count: resPost.length});
 });
   // route new post form mi blogs
