@@ -40,7 +40,7 @@ router.get('/recents', (req, res) => {
     return b.getTime() - a.getTime();
   });
  recentPost = recentPost.slice(0, recentPost.length > 5 ? 5 : recentPost.length);
-  res.json([recentPost]);
+  res.json({content: recentPost, count: recentPost.length});
 });
 
 router.get('/search', (req, res) => {
@@ -62,7 +62,7 @@ router.get('/search', (req, res) => {
 });
   // route new post form mi blogs
   router.post('/post', (req, res) => {
-    const {title, banner, description, content, category, tags} = req.body;
+    const {title, banner, description, content, category, tags, isVideo, videoApi, video, private} = req.body;
     const posts = getPosts();
 
     if(title && banner && description && content){
@@ -82,8 +82,12 @@ router.get('/search', (req, res) => {
         "slug": slug,
         "title": title,
         "banner": banner,
-        "content": content,
+        "isVideo": isVideo,
+        "videoApi": videoApi,
+        "video": video,
+        "private": private,
         "description": description,
+        "content": content,
         "created_at": createdAt,
         "update_at": createdAt,
         "category": category || "mainly",
@@ -101,7 +105,7 @@ router.get('/search', (req, res) => {
 
   router.put('/post/:id', (req, res) => {
     const {id} = req.params;
-    const {title, banner, description, content, category, tags} = req.body;
+    const {title, banner, description, content, category, tags, isVideo, video, videoApi, private} = req.body;
     const posts = getPosts();
     posts.forEach((post, index) => {
       if(post.id == id){
@@ -114,8 +118,12 @@ router.get('/search', (req, res) => {
             "slug": slug,
             "title": title || post.title,
             "banner": banner || post.banner,
-            "content": content || post.content,
+            "isVideo": isVideo || post.isVideo,
+            "videoApi": videoApi || post.videoApi,
+            "video": video || post.video,
+            "private": private || post.private,
             "description": description || post.description,
+            "content": content || post.content,
             "created_at": post.created_at,
             "update_at": updateAt,
             "category": category || post.category,
@@ -151,16 +159,19 @@ router.get('/search', (req, res) => {
   function getMinPosts(){
     const tempPost = [];
     getPosts().map((post) => {
-      tempPost.push({
-        id: post.id,
-        slug: post.slug,
-        title: post.title,
-        description: post.description,
-        created: post.created_at,
-        updated: post.update_at,
-        category: post.category,
-        tags: post.tags
-      });
+      if(!post.private){
+        tempPost.push({
+          id: post.id,
+          slug: post.slug,
+          title: post.title,
+          banner: post.banner,
+          description: post.description,
+          created: post.created_at,
+          updated: post.update_at,
+          category: post.category,
+          tags: post.tags,
+        });
+      }
      });
      return tempPost;
   }
