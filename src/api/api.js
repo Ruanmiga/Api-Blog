@@ -45,13 +45,12 @@ router.get('/recents', (req, res) => {
 
 router.get('/search', (req, res) => {
   let {title, category, tag} = req.query;
-  tags = [tag];
-  category = category == "" ? "mainly" : category;
+  
   const resPost = [];
   getMinPosts().map((post) => {
-    if((title && title == post.title) ||(category && category == post.category) || post.tags.find((tagi) => {
-       return tagi ==  tag;
-    }) == tag){
+    const finded = post.tags.some((itag) => itag == tag);
+
+    if((title && post.title) || (category && category == post.category) || finded){
       resPost.push(post);
     }
   });
