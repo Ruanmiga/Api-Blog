@@ -21,6 +21,13 @@ router.get('/post', (req, res) => {
     res.json(tempPost);
 });
 
+router.get('/categories', (req, res) => {
+   res.json(getCategories());
+});
+
+router.get('/tags', (req, res) => {
+  res.json(getTags());
+});
 //  get post from slug
 router.get('/post/:slug', (req, res) => {
   const {slug} = req.params;
@@ -45,7 +52,7 @@ router.get('/recents', (req, res) => {
 
 router.get('/search', (req, res) => {
   let {title, category, tag} = req.query;
-  
+
   const resPost = [];
   getMinPosts().map((post) => {
     const finded = post.tags.some((itag) => itag == tag);
@@ -79,10 +86,10 @@ router.get('/search', (req, res) => {
         "slug": slug,
         "title": title,
         "banner": banner,
-        "isVideo": isVideo,
+        "isVideo": isVideo || false,
         "videoApi": videoApi,
         "video": video,
-        "private": private,
+        "private": private || false,
         "description": description,
         "content": content,
         "created_at": createdAt,
@@ -171,6 +178,23 @@ router.get('/search', (req, res) => {
       }
      });
      return tempPost;
+  }
+
+  function getCategories(){
+    const categories = [];
+    getMinPosts().map((post) =>{
+      if(!categories.includes(post.category)) categories.push(post.category);
+    });
+    return categories;
+  }
+  function getTags(){
+    const tags = [];
+    getMinPosts().map((post) =>{
+      post.tags.map((tag) => {
+        if(!tags.includes(tag)) tags.push(tag);
+      });
+    });
+    return tags;
   }
   function updatePosts(posts){
     fs.writeFileSync(FILE,JSON.stringify(posts));
