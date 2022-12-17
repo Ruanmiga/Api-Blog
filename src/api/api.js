@@ -49,7 +49,7 @@ router.get('/search', (req, res) => {
   category = category == "" ? "mainly" : category;
   const resPost = [];
   getMinPosts().map((post) => {
-    if(post.title.equals(title) || post.category.equals(category) || post.tags.find((tagi) => {
+    if((title && title == post.title) ||(category && category == post.category) || post.tags.find((tagi) => {
        return tagi ==  tag;
     }) == tag){
       resPost.push(post);
