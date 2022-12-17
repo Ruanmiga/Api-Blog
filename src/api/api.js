@@ -49,7 +49,7 @@ router.get('/search', (req, res) => {
   category = category == "" ? "mainly" : category;
   const resPost = [];
   getMinPosts().map((post) => {
-    if(title === post.title || category === post.category || post.tags.find((tagi) => {
+    if(post.title.equals(title) || post.category.equals(category) || post.tags.find((tagi) => {
        return tagi ==  tag;
     }) == tag){
       resPost.push(post);
@@ -159,15 +159,15 @@ router.get('/search', (req, res) => {
     getPosts().map((post) => {
       if(!post.private){
         tempPost.push({
-          id: post.id,
-          slug: post.slug,
-          title: post.title,
-          banner: post.banner,
-          description: post.description,
-          created: post.created_at,
-          updated: post.update_at,
-          category: post.category,
-          tags: post.tags,
+          "id": post.id,
+          "slug": post.slug,
+          "title": post.title,
+          "banner": post.banner,
+          "description": post.description,
+          "created": post.created_at,
+          "updated": post.update_at,
+          "category": post.category,
+          "tags": post.tags,
         });
       }
      });
