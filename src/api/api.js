@@ -46,10 +46,10 @@ router.get('/recents', (req, res) => {
 router.get('/search', (req, res) => {
   let {title, category, tag} = req.query;
   tags = [tag];
-  category = category === undefined ? "mainly" : category;
+  category = category == "" ? "mainly" : category;
   const resPost = [];
   getMinPosts().map((post) => {
-    if(post.title == title || post.category == category || post.tags.find((tagi) => {
+    if(title === post.title || category === post.category || post.tags.find((tagi) => {
        return tagi ==  tag;
     }) == tag){
       resPost.push(post);
