@@ -2,13 +2,20 @@ const {Router} = require('express');
 const fs = require('fs');
 const path = require('path');
 const router = Router();
+const suid = require('short-unique-id');
 
 // File Api
 const FILE = path.join(__dirname,'./radata/posts.json');
+const CF = path.join(__dirname,'./radata/comments.json');
 
 if(!fs.existsSync(FILE)){
   fs.mkdirSync(path.join(__dirname, "./radata/"), {recursive: true});
   fs.writeFileSync(FILE, "[]");
+}
+
+if(!fs.existsSync(CF)){
+  fs.mkdirSync(path.join(__dirname, "./radata/"), {recursive: true});
+  fs.writeFileSync(CF, "{}");
 }
 
 // Routes 
@@ -16,9 +23,160 @@ router.get('/', (req, res) => {
     res.json({"welcome": "Bienvenido a la Api de Mi Blog", "version": 1.0});
   });
 
+  // Ruta de la api comentarios
+router.get('/comments', (req, res) => {
+  res.json(getComments());
+});
+
+router.get('/comments/:id', (req, res) => {
+   const {id} = req.params;
+   const comments = getComments();
+   if(comments[id]){
+     res.json(comments[id]);
+   }else res.status(400).json({"error": `not comments from post with id ${id}`});
+});
+
+router.post('/comments/:id', (req, res) => {
+  const {id} = req.params;
+  const {name, web, email, message} = req.body;
+  const comments = getComments();
+
+  if(name && web && email && message){
+    const publish = new Date();
+    uid = new suid({length: 10});
+    let finded = getMinPosts().some((post) => post.id == id);
+
+    if(finded){
+      const newComment = {
+        id: uid() + publish.getTime(),
+        publish,
+        name,
+        web,
+        email,
+        message,
+        isHeart: false,
+        isResponse: false
+      };
+  
+      if(comments[id]) comments[id].push(newComment);
+      else comments[id] = [newComment];
+      
+      updateComments(comments);
+      res.json({"sucess": "new comment add", "comment": newComment});
+    }else{
+      res.status(400).json({message: `Not post with id ${id}`});
+    }
+  }else{
+      res.status(400).json({"error": "Please fill all the fields"});
+  }
+});
+
+router.put('/comments/:id/:cid', (req, res) => {
+  const {id,cid} = req.params;
+  const {name, web, email, message} = req.body;
+  const comments = getComments();
+
+  if(comments[id]){
+     comments[id].map((comment,index) => {
+      if(comment.id == cid) {
+        if(name || web || email || message){
+          const publish = new Date();
+
+            const newComment = {
+              id: comment.id,
+              publish: publish || comment.publish,
+              name: name || comment.name,
+              web: web || comment.web,
+              email: email || comment.email,
+              message: message || comment.message
+            };
+
+            comments[id][index] = newComment;
+            updateComments(comments);
+            res.json({"sucess": "update comment", "comment": newComment});
+      }else{
+        res.status(400).json({"error": 'there is no data to update comment.'});
+      }
+    }else{
+        res.status(400).json({"error": `no comments found within ${id} id: ${cid}`});
+    }
+    });
+  }else{
+    res.status(400).json({"error": "no comment found with id: " + id});
+  }
+});
+
+router.delete('/comments/:id/:cid', (req, res) => {
+  const {id,cid} = req.params;
+  const comments = getComments();
+
+  if(comments[id]){
+    if(comments[id].length == 0){
+      res.json({"error": "not comments"});
+    }else {
+     comments[id].map((comment,index) => {
+      if(comment.id == cid) {
+        comments[id].splice(index, 1);
+        updateComments(comments);
+        res.json({"delete": comments});
+    }else{
+        res.status(400).json({"error": `no comment deleted found within ${id} id: ${cid}`});
+    }
+    });
+  }
+  }else{
+    res.status(400).json({"error": "no comment deleted found with id: " + id});
+  }
+});
+
+// responder comentarios
+
+router.post('/comments/reply/:id/:cid', (req, res) => {
+  const {id,cid} = req.params;
+  const {name, web, message, isHeart} = req.body;
+  const comments = getComments();
+
+  if(comments[id]){
+     comments[id].map((comment,index) => {
+      if(comment.id == cid) {
+        if(name && web && message){
+          const publish = new Date();
+
+            const response = {
+              publish: publish,
+              name: name,
+              web: web,
+              message: message,
+            };
+
+            comments[id][index]["isResponse"] = true;
+            comments[id][index]["response"] = response;
+            comments[id][index]["isHeart"] = isHeart || false;
+
+            updateComments(comments);
+            res.json({"sucess": "response comment", "response": response});
+      }else{
+        res.status(400).json({"error": 'there is no data to update comment.'});
+      }
+    }else{
+        res.status(400).json({"error": `no comments found within ${id} id: ${cid}`});
+    }
+    });
+  }else{
+    res.status(400).json({"error": "no comment found with id: " + id});
+  }
+});
+
+function getComments(){
+  return JSON.parse(fs.readFileSync(CF, "utf-8"));
+}
+
+function updateComments(comments){
+  fs.writeFileSync(CF,JSON.stringify(comments));
+}
+  // Rutas de la api blogs
 router.get('/post', (req, res) => {
-   const tempPost = getMinPosts();
-    res.json(tempPost);
+    res.json(getMinPosts());
 });
 
 router.get('/categories', (req, res) => {
@@ -74,33 +232,32 @@ router.get('/search', (req, res) => {
       let slug = title.toLowerCase().replaceAll(" ", "-");
       const createdAt = new Date();
 
-      posts.forEach((post) =>{
-        if(post.slug === slug){
-          res.status(400).json({"error": `post already exists ${post.name}`});
-          return;
-        }
-      });
+      const exists = posts.some((post) => post.slug === slug);
 
-      const newPost = {
-        "id": id,
-        "slug": slug,
-        "title": title,
-        "banner": banner,
-        "isVideo": isVideo || false,
-        "videoApi": videoApi,
-        "video": video,
-        "private": private || false,
-        "description": description,
-        "content": content,
-        "created_at": createdAt,
-        "update_at": createdAt,
-        "category": category || "mainly",
-        "tags": tags || "default"
-      };
-      posts.push(newPost);
-      updatePosts(posts);
-
-      res.json({"sucess": "new post successfully", "body": newPost});
+      if(exists){
+        res.status(400).json({"error": `post already exists`});
+      }else{
+        const newPost = {
+          "id": id,
+          "slug": slug,
+          "title": title,
+          "banner": banner,
+          "isVideo": isVideo || false,
+          "videoApi": videoApi,
+          "video": video,
+          "private": private || false,
+          "description": description,
+          "content": content,
+          "created_at": createdAt,
+          "update_at": createdAt,
+          "category": category || "mainly",
+          "tags": tags || "default"
+        };
+        posts.push(newPost);
+        updatePosts(posts);
+  
+        res.json({"sucess": "new post successfully", "body": newPost});
+      }
     }
     else{
       res.status(400).json({"error": "Please fill all the fields"});
@@ -196,7 +353,9 @@ router.get('/search', (req, res) => {
     });
     return tags;
   }
+
   function updatePosts(posts){
     fs.writeFileSync(FILE,JSON.stringify(posts));
   }
+
   module.exports = router;
