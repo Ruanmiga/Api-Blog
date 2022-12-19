@@ -191,11 +191,26 @@ router.get('/post/:slug', (req, res) => {
   const {slug} = req.params;
   const posts = getPosts();
 
-  posts.forEach((post) => {
-    if(post.slug == slug){
-      res.json(post);
-}});
- res.status(400).json({"error": "not post from id"});
+  let finded = posts.some(post => post.slug === slug);
+
+  if(finded){
+    posts.forEach((post, index) => {
+      if(post.slug == slug){
+        let size = posts.length - 1;
+        let prev, next;
+        if(index > 0 && size >= index){
+          prev = posts[index-1];
+        }
+         if(index < size){
+          next = posts[index+1];
+        }
+        post["prev"] = prev;
+        post["next"] = next;
+        res.json(post);
+  }});
+  }else{
+    res.status(400).json({"error": "not pos from id"});
+  }
 });
 
 router.get('/recents', (req, res) => {
@@ -224,12 +239,12 @@ router.get('/search', (req, res) => {
 });
   // route new post form mi blogs
   router.post('/post', (req, res) => {
-    const {title, banner, description, content, category, tags, isVideo, videoApi, video, private} = req.body;
+    const {title, banner, description, content, category, tags, isVideo, videoApi, video, private, islug} = req.body;
     const posts = getPosts();
 
     if(title && banner && description && content){
       let id = geneateId(posts.length + 1);
-      let slug = title.toLowerCase().replaceAll(" ", "-");
+      let slug = islug ? islug.toLowerCase().replaceAll(" ", "-") :  title.toLowerCase().replaceAll(" ", "-");
       const createdAt = new Date();
 
       const exists = posts.some((post) => post.slug === slug);
@@ -266,12 +281,12 @@ router.get('/search', (req, res) => {
 
   router.put('/post/:id', (req, res) => {
     const {id} = req.params;
-    const {title, banner, description, content, category, tags, isVideo, video, videoApi, private} = req.body;
+    const {title, banner, description, content, category, tags, isVideo, video, videoApi, private, islug} = req.body;
     const posts = getPosts();
     posts.forEach((post, index) => {
       if(post.id == id){
         if(title || banner || description || content || category || tags || isVideo || video || videoApi || private){
-          let slug = title ? title.toLowerCase().replaceAll(" ", "-") : post.slug;
+           let slug = islug ? islug.toLowerCase().replaceAll(" ", "-") :  title.toLowerCase().replaceAll(" ", "-");
           const updateAt = new Date();
 
           const newPost = {
