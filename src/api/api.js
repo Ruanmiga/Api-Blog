@@ -300,13 +300,25 @@ router.get('/search', (req, res) => {
   router.delete('/post/:id', (req, res) => {
     const {id} = req.params;
     const posts = getPosts();
+  if(posts.length > 0){
     posts.forEach((post, index) => {
       if(post.id == id){
+        let comments = getComments();
+        if(comments[id]){
+          delete comments[id];
+          updateComments(comments)
+        }
         posts.splice(index, 1);
         updatePosts(posts);
         res.json({"delete": posts});
-  }});
+  }else{
    res.status(400).json({"error": "not post deleted from id"});
+  }
+});
+
+  }else{
+   res.status(400).json({"error": "not post deleted from id"});
+  }
   });
 
   function geneateId(id){
@@ -357,5 +369,6 @@ router.get('/search', (req, res) => {
   function updatePosts(posts){
     fs.writeFileSync(FILE,JSON.stringify(posts));
   }
+
 
   module.exports = router;
