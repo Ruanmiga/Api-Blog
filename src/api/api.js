@@ -286,7 +286,13 @@ router.get('/search', (req, res) => {
     posts.forEach((post, index) => {
       if(post.id == id){
         if(title || banner || description || content || category || tags || isVideo || video || videoApi || private){
-           let slug = islug ? islug.toLowerCase().replaceAll(" ", "-") :  title.toLowerCase().replaceAll(" ", "-");
+          let slug = post.slug;
+          if(islug){
+            slug = islug.toLowerCase().replaceAll(" ", "-");
+          }else if(title && !islug){
+            slug = title.toLowerCase().replaceAll(" ", "-");
+          }
+          
           const updateAt = new Date();
 
           const newPost = {
