@@ -1,0 +1,19 @@
+
+
+ "version": 1,
+
+ "name": "mi-api-blog",
+
+ "builds": [
+
+   { "src": "src/index.js", "use": "@vercel/node" }
+
+ ],
+
+ "routes": [
+
+   { "src": "/(.*)", "dest": "/src/index.js" }
+
+ ]
+
+}
